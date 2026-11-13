@@ -3,10 +3,12 @@ name: Sync Framer site to GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'site/**'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -21,23 +23,46 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Download a copy of the Framer site
         run: |
-          wget --mirror \
+          rm -rf site && mkdir -p site
+          cd site
+          wget --recursive --level=5 \
                --convert-links \
                --adjust-extension \
                --page-requisites \
                --no-parent \
                --no-host-directories \
-               --directory-prefix=site \
-               --user-agent="Mozilla/5.0 (compatible; PagesMirror/1.0)" \
+               --restrict-file-names=windows \
+               --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36" \
                -e robots=off \
-               https://higher-spinosaurus-275942-c1e012ea3.framer.app/ || true
+               https://higher-spinosaurus-275942-c1e012ea3.framer.app/ \
+               2>&1 | tail -20 || true
+          cd ..
           # Fail only if the homepage itself was not downloaded
           test -f site/index.html
           # Disable Jekyll processing so files starting with _ are served
           touch site/.nojekyll
-          echo "Downloaded files:" && find site -type f | head -50
+
+      - name: Diagnostics
+        run: |
+          echo "=== File list ==="
+          find site -type f -printf "%s bytes  %p\n" | sort -rn | head -40
+          echo "=== index.html size ==="
+          wc -c site/index.html
+          echo "=== First 60 lines of index.html ==="
+          head -60 site/index.html
+
+      - name: Commit the copied site into the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A site
+          git commit -m "Update site copy from Framer" || echo "No changes to commit"
+          git push
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
