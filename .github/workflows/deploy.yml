@@ -1,0 +1,54 @@
+name: Sync Framer site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  mirror-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download a copy of the Framer site
+        run: |
+          wget --mirror \
+               --convert-links \
+               --adjust-extension \
+               --page-requisites \
+               --no-parent \
+               --no-host-directories \
+               --directory-prefix=site \
+               --user-agent="Mozilla/5.0 (compatible; PagesMirror/1.0)" \
+               -e robots=off \
+               https://higher-spinosaurus-275942-c1e012ea3.framer.app/ || true
+          # Fail only if the homepage itself was not downloaded
+          test -f site/index.html
+          # Disable Jekyll processing so files starting with _ are served
+          touch site/.nojekyll
+          echo "Downloaded files:" && find site -type f | head -50
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

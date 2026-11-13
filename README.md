@@ -1,16 +1,15 @@
-## Hi there 👋
+# Abin Issac — Portfolio
 
-<!--
-**AbinIssac/abinissac** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Live at **https://abinissac.github.io**
 
-Here are some ideas to get you started:
+This repo hosts a copy of my [Framer portfolio](https://higher-spinosaurus-275942-c1e012ea3.framer.app/) on GitHub Pages.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## How to update the site
+
+After publishing changes in Framer:
+
+1. Go to the **Actions** tab of this repo
+2. Open **"Sync Framer site to GitHub Pages"**
+3. Click **Run workflow**
+
+The workflow downloads the latest published version of the Framer site and redeploys it. The live site updates in about a minute.
