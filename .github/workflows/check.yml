@@ -1,0 +1,38 @@
+name: Check Framer URLs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe candidate URLs
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          : > check-results.txt
+          for u in \
+            "https://higher-spinosaurus-275942-c1e012ea3.framer.app/" \
+            "https://higher-spinosaurus-275942.framer.app/" ; do
+            echo "===== $u" >> check-results.txt
+            curl -sIL -A "$UA" --max-time 30 "$u" 2>&1 | grep -iE '^(HTTP|location)' >> check-results.txt || echo "curl failed" >> check-results.txt
+            echo "--- title:" >> check-results.txt
+            curl -sL -A "$UA" --max-time 30 "$u" 2>/dev/null | grep -o '<title>[^<]*' | head -1 >> check-results.txt || true
+            echo >> check-results.txt
+          done
+          cat check-results.txt
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add check-results.txt
+          git commit -m "URL check results" || echo "no change"
+          git push
